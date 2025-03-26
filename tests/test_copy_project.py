@@ -26,18 +26,18 @@ def default_copy(tmp_path_factory):
         src_path=str(repo_dir), dst_path=tmp_path, vcs_ref="HEAD", defaults=True
     ) as worker:
         worker.run_copy()
-    return tmp_path / "python_boilerplate"
+    return tmp_path
 
 
 @pytest.fixture
 def non_default_copy(tmp_path):
-    def _non_default_copy(answers: dict, expected_proj_path: str = "python_boilerplate"):
+    def _non_default_copy(answers: dict):
         repo_dir = Path(__file__).parent.parent
         with copier.Worker(
             src_path=str(repo_dir), dst_path=tmp_path, vcs_ref="HEAD", data=answers, defaults=True
         ) as worker:
             worker.run_copy()
-        return tmp_path / expected_proj_path
+        return tmp_path
 
     return _non_default_copy
 
@@ -82,17 +82,13 @@ def test_copy_with_apostrophe_and_run_tests(non_default_copy, install_copied):
 @pytest.mark.parametrize("project_title", ["Foo Bar", "Foo-Bar"])
 def test_copy_with_slugify_project_title(non_default_copy, install_copied, project_title):
     """Ensure that project titles with spaces or dashes are slugified by default for the repo name."""
-    dst_path = non_default_copy({"project_title": project_title}, "foo_bar")
-    assert dst_path.stem == "foo_bar"
+    dst_path = non_default_copy({"project_title": project_title})
     install_copied(dst_path)
 
 
 def test_copy_explicit_repository_name(non_default_copy, install_copied):
     """Ensure that a non-default repo name overrides the copier-generated default one."""
-    dst_path = non_default_copy(
-        {"project_title": "Foo's-Bar", "repository_name": "foobar"}, "foobar"
-    )
-    assert dst_path.stem == "foobar"
+    dst_path = non_default_copy({"project_title": "Foo's-Bar", "repository_name": "foobar"})
     install_copied(dst_path)
 
 
@@ -318,8 +314,8 @@ def test_copy_not_open_source(non_default_copy):
 
 def test_copy_with_no_console_script(non_default_copy):
     dst_path = non_default_copy({"command_line_interface": "n"})
-    assert (dst_path / "src" / dst_path.stem).exists()
-    cli_file = dst_path / dst_path.stem / "cli.py"
+    assert (dst_path / "src" / "python_boilerplate").exists()
+    cli_file = dst_path / "cli.py"
     assert not cli_file.exists()
 
     setup_path = dst_path / "pyproject.toml"
@@ -328,7 +324,7 @@ def test_copy_with_no_console_script(non_default_copy):
 
 def test_copy_with_console_script_files(non_default_copy):
     dst_path = non_default_copy({"command_line_interface": "y"})
-    cli_file = dst_path / "src" / dst_path.stem / "cli.py"
+    cli_file = dst_path / "src" / "python_boilerplate" / "cli.py"
     assert cli_file.exists()
 
     assert "[project.scripts]" in (dst_path / "pyproject.toml").read_text()
@@ -337,7 +333,7 @@ def test_copy_with_console_script_files(non_default_copy):
 def test_copy_with_console_script_cli(non_default_copy):
     context = {"command_line_interface": "y"}
     dst_path = non_default_copy(context)
-    package_name = dst_path.stem
+    package_name = "python_boilerplate"
     module_path = dst_path / "src" / package_name / "cli.py"
     module_name = ".".join([package_name, "cli"])
     spec = importlib.util.spec_from_file_location(module_name, module_path)
