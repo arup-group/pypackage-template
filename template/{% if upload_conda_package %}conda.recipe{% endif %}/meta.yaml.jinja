@@ -34,7 +34,7 @@ requirements:
   run:
     - python {{ pyproject.project['requires-python'] }}
     # dependencies are defined in the requirements directory.
-    {% for dep in requirements.string.split("\n") %}
+    {% for dep in requirements.string.strip().split("\n") %}
     - {{ dep.lower().replace(" ", "") }}
     {% endfor %}
 
@@ -43,7 +43,7 @@ test:
     - tests
     - pyproject.toml
   requires:
-    {% for dep in requirements_dev.string.split("\n") %}
+    {% for dep in requirements_dev.string.strip().split("\n") %}
     - {{ dep.lower().replace(" ", "") }}
     {% endfor %}
   commands:
@@ -54,7 +54,10 @@ about:
   home: {{ pyproject.project.urls.repository }}
   dev_url: {{ pyproject.project.urls.repository }}
   doc_url: {{ pyproject.project.urls.documentation }}
-  summary: {{ pyproject.project.description }}
+  summary: {{ pyproject.project.description }}{% endraw %}
+  {%- if open_source_license != "not_open_source" %}
+  {% raw %}
   license: {{ pyproject.project.license.text }}
   license_file: LICENSE
-{% endraw %}
+  {% endraw %}
+  {% endif %}
